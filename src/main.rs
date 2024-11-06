@@ -121,6 +121,7 @@ Options:
     opener.read(true);
     #[cfg(target_family = "unix")]
     {
+        info!("Using direct I/O");
         const O_DIRECT: i32 = 0x4000;
         opener.custom_flags(O_DIRECT);
     }
