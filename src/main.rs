@@ -43,8 +43,8 @@ Usage: fs-latency-exporter [options] FILENAME
 Options:
     --interval SECONDS
         Perform a measurement once every SECONDS minimum
-    --metrics PORT
-        Expose the statistics on HTTP PORT (default: 8080)";
+    --metrics ADDR:PORT
+        Expose the statistics on HTTP ADDR:PORT (default: 0.0.0.0:8080)";
     while let Some(arg) = args.next() {
         if &arg == "--help" {
             println!("{}", usage);
