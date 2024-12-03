@@ -1,6 +1,6 @@
 [package]
 name = "fs-latency-exporter"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Remi Rampin <remi@rampin.org"]
 description = "Measures read latency from a locally-mounted filesystem, exposes as metric"
