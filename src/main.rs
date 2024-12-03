@@ -98,6 +98,7 @@ Options:
         use prometheus::Encoder;
         use tokio::runtime::Builder;
         use warp::Filter;
+        use warp::http::Response;
 
         std::thread::spawn(move || {
             info!("Starting Prometheus HTTP server on {}", metrics_addr);
@@ -109,7 +110,10 @@ Options:
                     let encoder = prometheus::TextEncoder::new();
                     let metric_families = prometheus::gather();
                     encoder.encode(&metric_families, &mut buffer).unwrap();
-                    buffer
+
+                    Response::builder()
+                        .header("Content-type", "text/plain")
+                        .body(buffer)
                 });
                 warp::serve(routes).run(metrics_addr).await;
             });
