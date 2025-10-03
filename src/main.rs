@@ -35,6 +35,7 @@ fn main() {
     let mut filename: Option<PathBuf> = None;
     let mut interval = 1.0;
     let mut metrics_addr: std::net::SocketAddr = ([0, 0, 0, 0], 8080).into();
+    let mut buckets = None;
 
     let mut args = args_os();
     args.next();
@@ -53,6 +54,8 @@ Options:
             interval = parse_option(args.next(), "--interval");
         } else if &arg == "--metrics" {
             metrics_addr = parse_option(args.next(), "--metrics");
+        } else if &arg == "--buckets" {
+            buckets = args.next().to_owned();
         } else {
             if filename.is_none() {
                 filename = Some(arg.into());
@@ -73,6 +76,27 @@ Options:
         }
     };
 
+    let buckets = match buckets {
+        None => vec![
+            0.0001,
+            0.00025, 0.0005, 0.001,
+            0.0025, 0.005, 0.01,
+            0.025, 0.05, 0.1,
+            0.25, 0.5, 1.0,
+            2.5, 5.0, 10.0,
+        ],
+        Some(s) => {
+            let s = s.to_str().unwrap_or_else(|| {
+                eprintln!("Invalid buckets: not a string");
+                exit(2)
+            });
+            s.split(':').map(|e| e.parse().unwrap_or_else(|e| {
+                eprintln!("Invalid buckets: {}", e);
+                exit(2)
+            })).collect()
+        },
+    };
+
     // Set up Prometheus
     let errors_opts = Opts::new("errors_total", "Number of read errors");
     let errors = Counter::with_opts(errors_opts).unwrap();
@@ -80,14 +104,7 @@ Options:
         .register(Box::new(errors.clone()))
         .unwrap();
     let latency_opts = HistogramOpts::new("read_time_seconds", "Time taken to read (latency)");
-    let latency_opts = latency_opts.buckets(vec![
-        0.0001,
-        0.00025, 0.0005, 0.001,
-        0.0025, 0.005, 0.01,
-        0.025, 0.05, 0.1,
-        0.25, 0.5, 1.0,
-        2.5, 5.0, 10.0,
-    ]);
+    let latency_opts = latency_opts.buckets(buckets);
     let latency = Histogram::with_opts(latency_opts).unwrap();
     prometheus::default_registry()
         .register(Box::new(latency.clone()))
